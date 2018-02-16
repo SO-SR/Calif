@@ -3,6 +3,16 @@
 This is a Shiny web app for calibration of weights of statistical surveys
 prepared by Statistical Office of the Slovak Republic.
 
+To launch Calif run this command in R:
+```r
+shiny::runGitHub('Calif', 'SO-SR', destdir = getwd(), launch.browser = TRUE)
+```
+
+To install required packages run in R:
+```r
+install.packages(c('shiny', 'sampling', 'nleqslv', 'haven'))
+```
+
 Copyright (C) 2014-2018 The Statistical Office of the Slovak Republic
 
 This program is free software: you can redistribute it and/or modify
