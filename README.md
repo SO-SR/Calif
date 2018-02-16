@@ -13,6 +13,10 @@ To install required packages run in R:
 install.packages(c('shiny', 'sampling', 'nleqslv', 'haven'))
 ```
 
+To download single file app visit the webpage of the SO SR
+https://slovak.statistics.sk/wps/portal/ext/products/software.tools
+where you can find the Calif 4.0.R code that can be sourced in R and run by **calif()** command.
+
 Copyright (C) 2014-2018 The Statistical Office of the Slovak Republic
 
 This program is free software: you can redistribute it and/or modify
@@ -31,9 +35,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 Calif makes use of R packages shiny, sampling, nleqslv and haven.
 Small changes were made to the calib function of the sampling package and 
 to the pie function of the graphics package.
-
-For further details read the attached Manual or visit the website of the SO SR
-https://slovak.statistics.sk/wps/portal/ext/products/software.tools
 
 You are also free to try some calibration with the test data. Its usage
 is described in Chapter 6 of the Manual.
