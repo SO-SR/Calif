@@ -1,0 +1,8 @@
+Title: Calif
+Version: 4.0
+Author: Statistical Office of the Slovak Republic
+AuthorUrl: https://slovak.statistics.sk/
+License: GPL-3
+Tags: calif calibration weights survey
+DisplayMode: Normal
+Type: Shiny
