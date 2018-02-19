@@ -9,7 +9,7 @@ function(request)
                tags$p('Calif is the Shiny web application used for calibration of weights in statistical surveys. 
                       It is an open-source software and you are free to use it, also without any knowledge of R programming language.'),
                tags$p('Detailed information on how to use Calif can be found in the', 
-                      a(href = 'https://slovak.statistics.sk/wps/wcm/connect/e87eb546-3a98-448c-9022-c9d4c54d2dcd/Calif_Manual_v3_3.pdf?MOD=AJPERES&CVID=lvrhxQ7&CVID=lvrhxQ7',
+                      tags$a(href = 'https://slovak.statistics.sk/wps/wcm/connect/8a164814-ebda-43c1-b88e-28d40cb63a77/Calif_Manual_v4.0.pdf?MOD=AJPERES&CVID=m6IKz0d&CVID=m6IKz0d&CVID=m6IKz0d',
                         'Manual', class = "btn btn-primary btn-xs")),
                tags$hr(),
                tags$h3('Getting started'),
