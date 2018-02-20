@@ -72,7 +72,8 @@ function(input, output, session)
     ifelse(tools::file_ext(input$load_totals$name) == 'sas7bdat', dat <- try(read_sas(input$load_totals$datapath), silent = TRUE), dat <- try(read.table(input$load_totals$datapath, sep = input$separator2, dec = input$decimal2, header = TRUE, stringsAsFactors = FALSE, check.names = FALSE), silent = TRUE))
     if (is.data.frame(dat)) {
       if (nrow(dat) > 1 && ncol(dat) == 1) {
-        showModal(modalDialog('Incorrect form of the Totals!', footer = modalButton('OK'), easyClose = TRUE))
+        showModal(modalDialog('Incorrect form of the Totals! Please check the decimal/separator
+                              first.', footer = modalButton('OK'), easyClose = TRUE))
         return()
       }
       values$totals <- as.data.frame(dat)
@@ -247,6 +248,11 @@ function(input, output, session)
     else if (!isTruthy(input$stratification) && nrow(values$totals) > 1) {
       showModal(modalDialog('Table \'totals\' should consist of only 1 row in case of non-stratified calibration 
                             (with specified names in the header)', footer = actionButton('modal_ok', 'OK')))
+      req(FALSE)
+    }
+    else if (!is.numeric(values$data[, input$weights])) {
+      showModal(modalDialog('Weights are not in numeric form! You have probably set a wrong 
+                            decimal point. Please check it.', footer = actionButton('modal_ok', 'OK')))
       req(FALSE)
     }
     adj()  # strata list is set up
