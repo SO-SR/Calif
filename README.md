@@ -42,3 +42,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 Calif makes use of R packages shiny, sampling, nleqslv and haven.
 Small changes were made to the calib function of the sampling package and 
 to the pie function of the graphics package.
+
+<img src="https://github.com/SO-SR/Calif/blob/master/Preview.PNG?raw=true"  width="100%"
+height="100%"/>
