@@ -7,6 +7,12 @@ To launch Calif run this command in R:
 ```r
 shiny::runGitHub('Calif', 'SO-SR', destdir = getwd(), launch.browser = TRUE)
 ```
+or
+```r
+shiny::runUrl('https://slovak.statistics.sk/wps/wcm/connect/7014bfd4-54a2-4080-929f-eb949bf25e39/
+               calif.zip?MOD=AJPERES&CVID=m7Xjumj&CVID=m7Xjumj', filetype = '.zip', destdir = getwd(), 
+               launch.browser = TRUE)
+```
 
 To install required packages run in R:
 ```r
@@ -39,9 +45,21 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-Calif makes use of R packages shiny, sampling, nleqslv and haven.
+Calif makes use of R packages **shiny**, **sampling**, **nleqslv** and **haven**.
 Small changes were made to the calib function of the sampling package and 
 to the pie function of the graphics package.
 
-<img src="https://github.com/SO-SR/Calif/blob/master/Preview.PNG?raw=true"  width="100%"
+<table><tr><td>
+<img src="https://github.com/SO-SR/Calif/blob/master/Preview1.PNG?raw=true"  width="100%"
 height="100%"/>
+</td></tr></table>
+
+<table><tr><td>
+<img src="https://github.com/SO-SR/Calif/blob/master/Preview2.PNG?raw=true"  width="100%"
+height="100%"/>
+</td></tr></table>
+
+<table><tr><td>
+<img src="https://github.com/SO-SR/Calif/blob/master/Preview3.PNG?raw=true"  width="100%"
+height="100%"/>
+</td></tr></table>
