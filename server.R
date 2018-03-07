@@ -1,15 +1,25 @@
 function(input, output, session)
 {
   # reactive values
-  values <- reactiveValues(wd = getwd(), data = NULL, totals = NULL, calib_settings = NULL, weightsOUT = NULL, werecalibrated = NULL, out_totals1 = NULL, 
-                           out_totals2 = NULL, out_stats = NULL, out_pie = NULL, out_hist = NULL, out_box = NULL, out_weights = NULL, main = NULL,
-                           out_text1 = 'calif_output', out_text2 = 'calif_settings', out_info = NULL,
-                           select_num = NULL, select_weights = NULL, select_stra = NULL, select_cat = NULL, select_indicators = NULL, select_explore = NULL, 
-                           selected_num = NULL, selected_weights = '', selected_stra = '', selected_cat = NULL, selected_indicators = NULL)
+  values <- reactiveValues(wd = getwd(), data = NULL, data_HH = NULL, data_I = NULL, totals = NULL, calib_settings = NULL, weightsOUT = NULL, werecalibrated = NULL, 
+                           out_totals1 = NULL, out_totals2 = NULL, out_stats = NULL, out_pie = NULL, out_hist = NULL, out_box = NULL, out_weights = NULL, 
+                           ui_main = NULL, out_text1 = 'calif_output', out_text2 = 'calif_settings', out_info = NULL, multistage = FALSE,
+                           num = NULL, cat = NULL, select_num = NULL, select_weights = NULL, select_stra = NULL, select_cat = NULL, select_indicators = NULL, 
+                           select_explore = NULL, select_ID_HH = NULL, select_ID_I = NULL, selected_num = NULL, selected_weights = '', selected_stra = '', 
+                           selected_cat = NULL, selected_indicators = NULL, selected_ID_HH = NULL, selected_ID_I = NULL)
   
   # to the data tab
   observeEvent(input$next_tab, {
     updateNavbarPage(session, 'page', 'Data')
+  })
+  
+  # switch between type of calibration
+  observeEvent(input$switch_to_one, {
+    values$multistage <- FALSE
+  })
+  
+  observeEvent(input$switch_to_two, {
+    values$multistage <- TRUE
   })
   
   # to the calibration tab
@@ -31,14 +41,16 @@ function(input, output, session)
     }
   })
   
-  # data loading
+  # data loading - one-stage calibration
   observe({
     req(input$load_data)
     if (!tools::file_ext(input$load_data$name) %in% c('txt', 'csv', 'sas7bdat')) {
       showModal(modalDialog('Incorrect format! Only .csv, .txt or .sas7bdat extensions are allowed.', footer = modalButton('OK'), easyClose = TRUE))
       return()
     }
-    ifelse(tools::file_ext(input$load_data$name) == 'sas7bdat', dat <- try(read_sas(input$load_data$datapath), silent = TRUE), dat <- try(read.table(input$load_data$datapath, sep = input$separator1, dec = input$decimal1, header = TRUE, stringsAsFactors = FALSE, check.names = FALSE), silent = TRUE))
+    if (tools::file_ext(input$load_data$name) == 'sas7bdat') dat <- try(read_sas(input$load_data$datapath), silent = TRUE)
+    if (tools::file_ext(input$load_data$name) != 'sas7bdat') dat <- try(read.table(input$load_data$datapath, sep = input$separator1, dec = input$decimal1, 
+                                                                                   header = TRUE, stringsAsFactors = FALSE, check.names = FALSE), silent = TRUE)
     if (is.data.frame(dat)) {
       values$calib_settings <- NULL
       dat <- cbind(IDcalif = 1:nrow(dat), dat)
@@ -62,6 +74,76 @@ function(input, output, session)
     if (!is.data.frame(dat)) showModal(modalDialog('Data hasn\'t been loaded correctly!', footer = modalButton('OK'), easyClose = TRUE))
   })
   
+  # data loading - two-stage calibration
+  observe({
+    req(input$load_data_HH)
+    if (!tools::file_ext(input$load_data_HH$name) %in% c('txt', 'csv', 'sas7bdat')) {
+      showModal(modalDialog('Incorrect format! Only .csv, .txt or .sas7bdat extensions are allowed.', footer = modalButton('OK'), easyClose = TRUE))
+      return()
+    }
+    if (tools::file_ext(input$load_data_HH$name) == 'sas7bdat') dat <- try(read_sas(input$load_data_HH$datapath), silent = TRUE)
+    if (tools::file_ext(input$load_data_HH$name) != 'sas7bdat') dat <- try(read.table(input$load_data_HH$datapath, sep = input$separator1, dec = input$decimal1, 
+                                                                                   header = TRUE, stringsAsFactors = FALSE, check.names = FALSE), silent = TRUE)
+    if (is.data.frame(dat)) {
+      values$calib_settings <- NULL
+      dat <- cbind(IDcalif = 1:nrow(dat), dat)
+      values$data_HH <- as.data.frame(dat)
+      values$weightsOUT <- numeric(nrow(dat))
+      values$werecalibrated <- NULL
+      updateSelectInput(session, 'weights', choices = c(Choose = '', names(dat)[-1]))
+      updateSelectInput(session, 'stra', choices = c(Choose = '', names(dat)[-1]))
+      updateSelectInput(session, 'strata', choices = character(0))
+      updateSelectInput(session, 'ID_HH', choices = c(Choose = '', names(dat)[-1]))
+      values$select_weights <- c(Choose = '', names(dat)[-1])
+      values$select_stra <- c(Choose = '', names(dat)[-1])
+      values$select_ID_HH <- c(Choose = '', names(dat)[-1])
+    }
+    if (!is.data.frame(dat)) showModal(modalDialog('Data hasn\'t been loaded correctly!', footer = modalButton('OK'), easyClose = TRUE))
+  })
+  
+  observe({
+    req(input$load_data_I)
+    if (!tools::file_ext(input$load_data_I$name) %in% c('txt', 'csv', 'sas7bdat')) {
+      showModal(modalDialog('Incorrect format! Only .csv, .txt or .sas7bdat extensions are allowed.', footer = modalButton('OK'), easyClose = TRUE))
+      return()
+    }
+    if (tools::file_ext(input$load_data_I$name) == 'sas7bdat') dat <- try(read_sas(input$load_data_I$datapath), silent = TRUE)
+    if (tools::file_ext(input$load_data_I$name) != 'sas7bdat') dat <- try(read.table(input$load_data_I$datapath, sep = input$separator3, dec = input$decimal3, 
+                                                                                      header = TRUE, stringsAsFactors = FALSE, check.names = FALSE), silent = TRUE)
+    if (is.data.frame(dat)) {
+      values$data_I <- as.data.frame(dat)
+      updateSelectInput(session, 'ID_I', choices = c(Choose = '', names(dat)))
+      values$select_ID_I <- c(Choose = '', names(dat))
+    }
+    if (!is.data.frame(dat)) showModal(modalDialog('Data hasn\'t been loaded correctly!', footer = modalButton('OK'), easyClose = TRUE))
+  })
+  
+  observe({
+    req(input$load_data_HH, input$load_data_I, input$ID_HH, input$ID_I)
+    req(input$ID_HH %in% names(values$data_HH), input$ID_I %in% names(values$data_I))
+    if (max(duplicated(values$data_HH[, input$ID_HH])) > 0) {
+      showModal(modalDialog('There are duplicates in Household file ID\'s!', footer = modalButton('OK'), easyClose = TRUE))
+      req(FALSE)
+    }
+    if (!setequal(values$data_HH[, input$ID_HH], values$data_I[, input$ID_I])) {
+      showModal(modalDialog('Household ID\'s in both files do not exactly match!', footer = modalButton('OK'), easyClose = TRUE))
+      req(FALSE)
+    }
+    if (length(setdiff(intersect(names(values$data_HH), names(values$data_I)), input$ID_HH)) > 0) {
+      showModal(modalDialog('There are some variables with the same names in both files. Each variable name (except for Household ID\'s) must be unique.
+                            Please rename it, in order to avoid possible joining problems.', footer = modalButton('OK'), easyClose = TRUE))
+      req(FALSE)
+    }
+    updateSelectInput(session, 'num', choices = list('Household file' = names(values$data_HH)[-1], 'Individual file' = names(values$data_I)))
+    updateSelectInput(session, 'cat', choices = list('Household file' = names(values$data_HH)[-1], 'Individual file' = names(values$data_I)))
+    updateSelectInput(session, 'indicators', choices = list('Household file' = names(values$data_HH)[-1], 'Individual file' = names(values$data_I)))
+    updateSelectInput(session, 'explore', choices = c(Choose = '', list('Household file' = names(values$data_HH)[-1], 'Individual file' = names(values$data_I))))
+    values$select_num <- list('Household file' = names(values$data_HH)[-1], 'Individual file' = names(values$data_I))
+    values$select_cat <- list('Household file' = names(values$data_HH)[-1], 'Individual file' = names(values$data_I))
+    values$select_indicators <- list('Household file' = names(values$data_HH)[-1], 'Individual file' = names(values$data_I))
+    values$select_explore <- c(Choose = '', list('Household file' = names(values$data_HH)[-1], 'Individual file' = names(values$data_I)))
+  })
+  
   # totals loading
   observe({
     req(input$load_totals)
@@ -69,7 +151,9 @@ function(input, output, session)
       showModal(modalDialog('Incorrect format! Only .csv, .txt or .sas7bdat extensions are allowed.', footer = modalButton('OK'), easyClose = TRUE))
       return()
     }
-    ifelse(tools::file_ext(input$load_totals$name) == 'sas7bdat', dat <- try(read_sas(input$load_totals$datapath), silent = TRUE), dat <- try(read.table(input$load_totals$datapath, sep = input$separator2, dec = input$decimal2, header = TRUE, stringsAsFactors = FALSE, check.names = FALSE), silent = TRUE))
+    if (tools::file_ext(input$load_totals$name) == 'sas7bdat') dat <- try(read_sas(input$load_totals$datapath), silent = TRUE)
+    if (tools::file_ext(input$load_totals$name) != 'sas7bdat') dat <- try(read.table(input$load_totals$datapath, sep = input$separator2, dec = input$decimal2, 
+                                                                                     header = TRUE, stringsAsFactors = FALSE, check.names = FALSE), silent = TRUE)
     if (is.data.frame(dat)) {
       if (nrow(dat) > 1 && ncol(dat) == 1) {
         showModal(modalDialog('Incorrect form of the Totals! Please check the decimal/separator
@@ -81,7 +165,7 @@ function(input, output, session)
     if (!is.data.frame(dat)) showModal(modalDialog('Totals hasn\'t been loaded correctly!', footer = modalButton('OK'), easyClose = TRUE))
   })
   
-  # show loaded data
+  # show loaded data - one-stage calibration
   output$data_rows <- renderText({
     if (is.null(values$data)) return(0)
     nrow(values$data)
@@ -94,6 +178,35 @@ function(input, output, session)
   
   output$show_data <- renderDataTable({
     values$data[-1]
+  }, options = list(pageLength = 5, lengthMenu = c(5, 10, 20, 50, 100, 500)))
+  
+  # show loaded data - two-stage calibration
+  output$data_rows_HH <- renderText({
+    if (is.null(values$data_HH)) return(0)
+    nrow(values$data_HH)
+  })
+  
+  output$data_rows_I <- renderText({
+    if (is.null(values$data_I)) return(0)
+    nrow(values$data_I)
+  })
+  
+  output$data_columns_HH <- renderText({
+    if (is.null(values$data_HH)) return(0)
+    ncol(values$data_HH)
+  })
+  
+  output$data_columns_I <- renderText({
+    if (is.null(values$data_I)) return(0)
+    ncol(values$data_I)
+  })
+  
+  output$show_data_HH <- renderDataTable({
+    values$data_HH[-1]
+  }, options = list(pageLength = 5, lengthMenu = c(5, 10, 20, 50, 100, 500)))
+  
+  output$show_data_I <- renderDataTable({
+    values$data_I
   }, options = list(pageLength = 5, lengthMenu = c(5, 10, 20, 50, 100, 500)))
   
   # show loaded totals
@@ -114,19 +227,25 @@ function(input, output, session)
   # explore variables
   output$explore_plot <- renderPlot({
     req(input$explore)
-    if (input$explore_as_cat == TRUE || is.character(isolate(values$data)[, input$explore]))
-      return(barplot(table(isolate(values$data)[,input$explore]), border = FALSE, xlab = input$explore, ylab = 'Frequency', main = paste('Barplot of', input$explore, sep = ' ')))
-    return(hist(isolate(values$data)[,input$explore], col = 'grey', border = FALSE, xlab = input$explore, main = paste('Histogram of', input$explore, sep = ' ')))
+    if (isolate(!values$multistage)) data <- isolate(values$data)
+    else if (input$explore %in% names(isolate(values$data_HH))) data <- isolate(values$data_HH)
+    else if (input$explore %in% names(isolate(values$data_I))) data <- isolate(values$data_I)
+    if (input$explore_as_cat == TRUE || is.character(data[, input$explore]))
+      return(barplot(table(data[,input$explore]), border = FALSE, xlab = input$explore, ylab = 'Frequency', main = paste('Barplot of', input$explore, sep = ' ')))
+    return(hist(data[,input$explore], col = 'grey', border = FALSE, xlab = input$explore, main = paste('Histogram of', input$explore, sep = ' ')))
   })
   
   output$explore_summary <- renderTable({
     req(input$explore)
-    if (input$explore_as_cat == TRUE || is.character(isolate(values$data)[, input$explore])) {
-      x <- as.data.frame(table(isolate(values$data)[,input$explore], exclude = NULL))
+    if (isolate(!values$multistage)) data <- isolate(values$data)
+    else if (input$explore %in% names(isolate(values$data_HH))) data <- isolate(values$data_HH)
+    else if (input$explore %in% names(isolate(values$data_I))) data <- isolate(values$data_I)
+    if (input$explore_as_cat == TRUE || is.character(data[, input$explore])) {
+      x <- as.data.frame(table(data[,input$explore], exclude = NULL))
       names(x) <- c('Value', 'Frequency')
       return(x)
     }
-    x <- as.data.frame(as.array(summary(isolate(values$data)[, input$explore])))
+    x <- as.data.frame(as.array(summary(data[, input$explore])))
     names(x) <- rep('', 2)
     return(x)
   })
@@ -137,16 +256,23 @@ function(input, output, session)
     if (input$method == 'Linear bounded') updateRadioButtons(session, 'solver', selected = 'calib')
   })
   
+  # create values$num and values$cat in case of one-stage calibration
+  observe({
+    req(!values$multistage)
+    values$num <- input$num
+    values$cat <- input$cat
+  })
+  
   # data adjustment
   adj <- reactive({
     data <- values$data
     totals <- values$totals
-    if (input$stratification == TRUE) choosecolumns <- c(1, which(names(data) %in% c(input$cat, input$num)), 
+    if (input$stratification == TRUE) choosecolumns <- c(which(names(data) %in% 'IDcalif'), which(names(data) %in% c(values$cat, values$num)), 
                                                          which(names(data) %in% input$indicators),
                                                          which(names(data) == input$stra), which(names(data) == input$weights))
     if (input$stratification == FALSE) {
       data <- cbind(data, STRAcalif = 0)
-      choosecolumns <- c(1, which(names(data) %in% c(input$cat, input$num)), which(names(data) %in% input$indicators),
+      choosecolumns <- c(which(names(data) %in% 'IDcalif'), which(names(data) %in% c(values$cat, values$num)), which(names(data) %in% input$indicators),
                          which(names(data) == 'STRAcalif'), which(names(data) == input$weights))
     }
     data <- data[, choosecolumns]
@@ -154,8 +280,8 @@ function(input, output, session)
     names(data)[ncol(data)] <- 'WEIGHTcalif'
     miss <- NULL
     if (isTruthy(input$miss)) miss <- unlist(strsplit(input$miss, ','))
-    if (input$eliminate_miss == TRUE && !is.null(miss) && isTruthy(input$cat)) {
-      for (i in miss) data[input$cat][data[input$cat] == i] <- NA
+    if (input$eliminate_miss == TRUE && !is.null(miss) && isTruthy(values$cat)) {
+      for (i in miss) data[values$cat][data[values$cat] == i] <- NA
       data <- data[complete.cases(data),]
     }
     if (input$stratification == TRUE) {
@@ -165,12 +291,12 @@ function(input, output, session)
       }
       data <- data[data$STRAcalif %in% intersect(data$STRAcalif, totals[, 1]), ]
     }
-    ncat <- length(input$cat)
-    nnum <- length(input$num)
+    ncat <- length(values$cat)
+    nnum <- length(values$num)
     k <- 0
     n <- 0
-    if (isTruthy(input$cat)) k <- which(names(data)[-1] %in% input$cat)
-    if (isTruthy(input$num)) n <- which(names(data)[-1] %in% input$num)
+    if (isTruthy(values$cat)) k <- which(names(data)[-1] %in% values$cat)
+    if (isTruthy(values$num)) n <- which(names(data)[-1] %in% values$num)
     totcol <- NULL
     for (i in 1:(ncat + nnum)) {
       if (i %in% k) {
@@ -211,14 +337,26 @@ function(input, output, session)
   AD_linear <- reactive({
     initial <- val()$data$WEIGHTcalif
     lin <- cal(val()$data[, -1], val()$totals, input$stratification, adj()$miss, input$indicators, input$indicators_stats, 
-               input$num, adj()$ncat, adj()$nnum, adj()$k, adj()$n, 'Linear', 'calib', NULL, NULL, input$maxit, input$tol)$result
+               values$num, adj()$ncat, adj()$nnum, adj()$k, adj()$n, 'Linear', 'calib', NULL, NULL, input$maxit, input$tol)$result
     mean(abs(lin - initial))
   })
   
   # check the inputs prior to calibration
   observeEvent(req(input$page == 'Calibration'), {
-    if (!isTruthy(values$data)) {
+    if (!isTruthy(values$data) && !values$multistage) {
       showModal(modalDialog('Data are not loaded!', footer = actionButton('modal_ok', 'OK')))
+      req(FALSE)
+    }
+    else if (!isTruthy(values$data_HH) && values$multistage) {
+      showModal(modalDialog('Household file is not loaded!', footer = actionButton('modal_ok', 'OK')))
+      req(FALSE)
+    }
+    else if (!isTruthy(values$data_I) && values$multistage) {
+      showModal(modalDialog('Individual file is not loaded!', footer = actionButton('modal_ok', 'OK')))
+      req(FALSE)
+    }
+    else if ((!isTruthy(input$ID_HH) || !isTruthy(input$ID_I)) && values$multistage) {
+      showModal(modalDialog('Specify Household ID for both files!', footer = actionButton('modal_ok', 'OK')))
       req(FALSE)
     }
     else if (!isTruthy(values$totals)) {
@@ -250,11 +388,49 @@ function(input, output, session)
                             (with specified names in the header)', footer = actionButton('modal_ok', 'OK')))
       req(FALSE)
     }
-    else if (!is.numeric(values$data[, input$weights])) {
+    else if (!is.numeric(values$data[, input$weights]) && !values$multistage) {
       showModal(modalDialog('Weights are not in numeric form! You have probably set a wrong 
                             decimal point. Please check it.', footer = actionButton('modal_ok', 'OK')))
       req(FALSE)
     }
+    else if (!is.numeric(values$data_HH[, input$weights]) && values$multistage) {
+      showModal(modalDialog('Weights are not in numeric form! You have probably set a wrong 
+                            decimal point. Please check it.', footer = actionButton('modal_ok', 'OK')))
+      req(FALSE)
+    }
+    
+    if (values$multistage) {
+      num_HH <- intersect(names(values$data_HH), input$num)
+      cat_HH <- intersect(names(values$data_HH), input$cat)
+      indicators_HH <- intersect(names(values$data_HH), input$indicators)
+      num_I <- intersect(names(values$data_I), input$num)
+      cat_I <- intersect(names(values$data_I), input$cat)
+      indicators_I <- intersect(names(values$data_I), input$indicators)
+      values$cat <- cat_HH
+      values$num <- c(num_HH, num_I)
+      
+      miss <- NULL
+      if (isTruthy(input$miss)) miss <- unlist(strsplit(input$miss, ','))
+      dat1 <- values$data_HH[names(values$data_HH) %in% c('IDcalif', input$ID_HH, input$weights, input$stra, cat_HH, num_HH, indicators_HH)]
+      dat2 <- values$data_I[names(values$data_I) %in% c(input$ID_I, num_I, indicators_I)]
+      if (isTruthy(cat_I)) {
+        for (x in cat_I) {
+          v <- setdiff(sort(unique(values$data_I[, x])), miss)
+          dat3 <- as.data.frame(do.call(cbind, lapply(v, function(z) as.numeric(values$data_I[, x] == z))))
+          names(dat3) <- paste(x, v, sep = '_')
+          dat2 <- cbind(dat2, dat3)
+          values$num <- c(values$num, names(dat3))
+        }
+      }
+      dat2 <- aggregate(dat2[names(dat2) %in% c(values$num, indicators_I)], dat2[input$ID_I], FUN = sum)
+      values$data <- merge(dat1, dat2, by.x = input$ID_HH, by.y = input$ID_I, all = FALSE, sort = FALSE)
+      if (!identical(values$data[input$ID_HH], values$data_HH[input$ID_HH])) {
+        showModal(modalDialog('Joining error! Check the joining ID\'s.', footer = actionButton('modal_ok', 'OK')))
+        req(FALSE)
+      }
+      showModal(modalDialog('Joined file has been created.', footer = modalButton('OK'), easyClose = TRUE))
+    }
+    
     adj()  # strata list is set up
   })
   
@@ -268,7 +444,7 @@ function(input, output, session)
     showModal(modalDialog('Please wait...', footer = NULL))
     
     # creating output UI first
-    values$main <- tagList(
+    values$ui_main <- tagList(
       fluidRow(
         column(4,
                conditionalPanel(
@@ -351,7 +527,7 @@ function(input, output, session)
     if (isTruthy(input$indicators) && isTruthy(input$indicators_stats)) 
       columns <- c(apply(expand.grid(input$indicators, input$indicators_stats, stringsAsFactors = FALSE), 1, paste, collapse = '.'), columns)
     res <- cal(val()$data[, -1], val()$totals, input$stratification, adj()$miss, input$indicators, input$indicators_stats, 
-               input$num, adj()$ncat, adj()$nnum, adj()$k, adj()$n, input$method, input$solver, input$L, input$U, input$maxit, input$tol)
+               values$num, adj()$ncat, adj()$nnum, adj()$k, adj()$n, input$method, input$solver, input$L, input$U, input$maxit, input$tol)
     removeModal()
     colnames(res$sums1) <- colnames(res$sums2) <- columns
     if (input$stratification == TRUE) {
@@ -385,7 +561,7 @@ function(input, output, session)
   # show with initial weights
   observeEvent(input$show_initial, {
     # creating output UI first
-    values$main <- tagList(
+    values$ui_main <- tagList(
       tags$h4('Totals obtained', style = 'color: #367AB4'),
       checkboxInput('show_as_values', 'Show obtained totals as values'),
       tableOutput('result_totals')
@@ -396,7 +572,7 @@ function(input, output, session)
     if (isTruthy(input$indicators) && isTruthy(input$indicators_stats)) 
       columns <- c(apply(expand.grid(input$indicators, input$indicators_stats, stringsAsFactors = FALSE), 1, paste, collapse = '.'), columns)
     res <- cal(val()$data[, -1], val()$totals, input$stratification, adj()$miss, input$indicators, input$indicators_stats, 
-               input$num, adj()$ncat, adj()$nnum, adj()$k, adj()$n, input$method, 'initial', NULL, NULL, input$maxit, input$tol)
+               values$num, adj()$ncat, adj()$nnum, adj()$k, adj()$n, input$method, 'initial', NULL, NULL, input$maxit, input$tol)
     colnames(res$sums1) <- colnames(res$sums2) <- columns
     if (input$stratification == TRUE) {
       res$sums1 <- cbind(Stratum = res$rows, res$sums1)
@@ -407,8 +583,10 @@ function(input, output, session)
   })
   
   # RENDERING OUTPUTS
-  output$main <- renderUI({
-    values$main
+  
+  # UI for mainPanel of Calibration tab
+  output$ui_main <- renderUI({
+    values$ui_main
   })
   
   output$result_totals <- renderTable({
@@ -500,17 +678,27 @@ function(input, output, session)
       values$out_info <- 'The files cannot have the same name!'
       req(FALSE)
     }
-    data <- values$data
     settings <- values$calib_settings
-    data <- cbind(data, CalibrationWeight = values$weightsOUT)
     if (!is.null(settings)) {
       settings <- as.data.frame(settings)
       settings[settings$method %in% c('Linear', 'Raking ratio'), c('lower_bound', 'upper_bound')] <- NA
       settings <- settings[!duplicated(settings$stratum, fromLast = TRUE), ]
       settings <- settings[order(settings$stratum), ]
     }
-    write.table(data[, -1], paste0(file.path(input$save_folder, input$save_data), '.csv'), sep = input$separator1, dec = input$decimal1, na = '', row.names = FALSE)
-    write.table(settings, paste0(file.path(input$save_folder, input$save_settings), '.csv'), sep = input$separator1, dec = input$decimal1, na = '', row.names = FALSE)
+    if (!values$multistage) {
+      data <- values$data
+      data <- cbind(data, CalibrationWeight = values$weightsOUT)
+      write.table(data[, -1], paste0(file.path(input$save_folder, input$save_data), '.csv'), sep = input$separator1, dec = input$decimal1, na = '', row.names = FALSE)
+      write.table(settings, paste0(file.path(input$save_folder, input$save_settings), '.csv'), sep = input$separator1, dec = input$decimal1, na = '', row.names = FALSE)
+    }
+    if (values$multistage) {
+      data_HH <- cbind(values$data_HH, CalibrationWeight = values$weightsOUT)
+      data_I <- merge(values$data_I, data_HH[c(input$ID_HH, 'CalibrationWeight')], by.x = input$ID_I, by.y = input$ID_HH, sort = FALSE)
+      write.table(data_HH[, !names(data_HH) %in% 'IDcalif'], paste0(file.path(input$save_folder, input$save_data), '_HH.csv'), 
+                  sep = input$separator1, dec = input$decimal1, na = '', row.names = FALSE)
+      write.table(data_I, paste0(file.path(input$save_folder, input$save_data), '_IND.csv'), sep = input$separator3, dec = input$decimal3, na = '', row.names = FALSE)
+      write.table(settings, paste0(file.path(input$save_folder, input$save_settings), '.csv'), sep = input$separator1, dec = input$decimal1, na = '', row.names = FALSE)
+    }
     values$out_info <- 'The files have been saved.'
   })
   
@@ -526,23 +714,34 @@ function(input, output, session)
     values$selected_num <- input$num
     values$selected_cat <- input$cat
     values$selected_indicators <- input$indicators
+    values$selected_ID_HH <- input$ID_HH
+    values$selected_ID_I <- input$ID_I
   })
   
   # bookmarking
   onBookmark(function(state) {
     state$values$data <- values$data
+    state$values$data_HH <- values$data_HH
+    state$values$data_I <- values$data_I
     state$values$totals <- values$totals
+    state$values$multistage <- values$multistage
+    state$values$num <- values$num
+    state$values$cat <- values$cat
     state$values$select_weights <- values$select_weights
     state$values$select_stra <- values$select_stra
     state$values$select_num <- values$select_num
     state$values$select_cat <- values$select_cat
     state$values$select_indicators <- values$select_indicators
     state$values$select_explore <- values$select_explore
+    state$values$select_ID_HH <- values$select_ID_HH
+    state$values$select_ID_I <- values$select_ID_I
     state$values$selected_weights <- values$selected_weights
     state$values$selected_stra <- values$selected_stra
     state$values$selected_num <- values$selected_num
     state$values$selected_cat <- values$selected_cat
     state$values$selected_indicators <- values$selected_indicators
+    state$values$selected_ID_HH <- values$selected_ID_HH
+    state$values$selected_ID_I <- values$selected_ID_I
     state$values$wd <- values$wd
     state$values$calib_settings <- values$calib_settings
     state$values$weightsOUT <- values$weightsOUT
@@ -554,7 +753,7 @@ function(input, output, session)
     state$values$out_hist <- values$out_hist
     state$values$out_box <- values$out_box
     state$values$out_weights <- values$out_weights
-    state$values$main <- values$main
+    state$values$ui_main <- values$ui_main
     state$values$out_text1 <- values$out_text1
     state$values$out_text2 <- values$out_text2
     state$values$out_info <- values$out_info
@@ -562,24 +761,35 @@ function(input, output, session)
   
   onRestore(function(state) {
     values$data <- state$values$data
+    values$data_HH <- state$values$data_HH
+    values$data_I <- state$values$data_I
     values$totals <- state$values$totals
+    values$multistage <- state$values$multistage
+    values$num <- state$values$num
+    values$cat <- state$values$cat
     values$select_weights <- state$values$select_weights
     values$select_stra <- state$values$select_stra
     values$select_num <- state$values$select_num
     values$select_cat <- state$values$select_cat
     values$select_indicators <- state$values$select_indicators
     values$select_explore <- state$values$select_explore
+    values$select_ID_HH <- state$values$select_ID_HH
+    values$select_ID_I <- state$values$select_ID_I
     values$selected_weights <- state$values$selected_weights
     values$selected_stra <- state$values$selected_stra
     values$selected_num <- state$values$selected_num
     values$selected_cat <- state$values$selected_cat
     values$selected_indicators <- state$values$selected_indicators
+    values$selected_ID_HH <- state$values$selected_ID_HH
+    values$selected_ID_I <- state$values$selected_ID_I
     updateSelectInput(session, 'weights', choices = state$values$select_weights, selected = state$values$selected_weights)
     updateSelectInput(session, 'stra', choices = state$values$select_stra, selected = state$values$selected_stra)
     updateSelectInput(session, 'num', choices = state$values$select_num, selected = state$values$selected_num)
     updateSelectInput(session, 'cat', choices = state$values$select_cat, selected = state$values$selected_cat)
     updateSelectInput(session, 'indicators', choices = state$values$select_indicators, selected = state$values$selected_indicators)
     updateSelectInput(session, 'explore', choices = state$values$select_explore)
+    updateSelectInput(session, 'ID_HH', choices = state$values$select_ID_HH, selected = state$values$selected_ID_HH)
+    updateSelectInput(session, 'ID_I', choices = state$values$select_ID_I, selected = state$values$selected_ID_I)
     values$wd <- state$values$wd
     values$calib_settings <- state$values$calib_settings
     values$weightsOUT <- state$values$weightsOUT
@@ -591,12 +801,11 @@ function(input, output, session)
     values$out_hist <- state$values$out_hist
     values$out_box <- state$values$out_box
     values$out_weights <- state$values$out_weights
-    values$main <- state$values$main
+    values$ui_main <- state$values$ui_main
     values$out_text1 <- state$values$out_text1
     values$out_text2 <- state$values$out_text2
     values$out_info <- state$values$out_info
   })
   
-  setBookmarkExclude(c('load_data', 'load_totals', 'page', 'calibrate', 'change_wd', 'show_initial', 'next_tab', 'proceed', 'save_result', 'modal_ok', 'save_it'))
+  setBookmarkExclude(c('load_data', 'load_data_HH', 'load_data_I', 'load_totals', 'page', 'calibrate', 'change_wd', 'show_initial', 'next_tab', 'proceed', 'save_result', 'modal_ok', 'save_it'))
 }
-  

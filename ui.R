@@ -53,16 +53,44 @@ function(request)
       title = 'Data',
       sidebarLayout(
         sidebarPanel(width = 3,
-                     tags$h4('Load data', style = 'color: #367AB4'),
-                     fileInput('load_data', label = NULL, accept = c('.txt', '.csv', '.sas7bdat')),
+                     conditionalPanel(
+                       condition = 'input.switch_to_two == input.switch_to_one',
+                       actionButton('switch_to_two', 'Switch to two-stage calibration', class = "btn btn-primary btn-block", icon = icon('refresh', lib = 'glyphicon')),
+                       tags$h4('Load data', style = 'color: #367AB4'),
+                       fileInput('load_data', label = NULL, accept = c('.txt', '.csv', '.sas7bdat'))
+                     ),
+                     conditionalPanel(
+                       condition = 'input.switch_to_two > input.switch_to_one',
+                       actionButton('switch_to_one', 'Switch to one-stage calibration', class = "btn btn-primary btn-block", icon = icon('refresh', lib = 'glyphicon')),
+                       tags$h4('Load data - Household file', style = 'color: #367AB4'),
+                       fileInput('load_data_HH', label = NULL, accept = c('.txt', '.csv', '.sas7bdat'))
+                     ),
                      radioButtons('separator1', 'Separator', c('Semicolon' = ';', 'Comma' = ',', 'Space' = ' ', 'Tab' = '\t'), inline = TRUE),
                      radioButtons('decimal1', 'Decimal', c('Period' = '.', 'Comma' = ','), inline = TRUE),
                      tags$hr(),
+                     conditionalPanel(
+                       condition = 'input.switch_to_two > input.switch_to_one',
+                       tags$h4('Load data - Individual file', style = 'color: #367AB4'),
+                       fileInput('load_data_I', label = NULL, accept = c('.txt', '.csv', '.sas7bdat')),
+                       radioButtons('separator3', 'Separator', c('Semicolon' = ';', 'Comma' = ',', 'Space' = ' ', 'Tab' = '\t'), inline = TRUE),
+                       radioButtons('decimal3', 'Decimal', c('Period' = '.', 'Comma' = ','), inline = TRUE),
+                       tags$hr()
+                     ),
                      tags$h4('Load totals', style = 'color: #367AB4'),
                      fileInput('load_totals', label = NULL, accept = c('.txt', '.csv', '.sas7bdat')),
                      radioButtons('separator2', 'Separator', c('Semicolon' = ';', 'Comma' = ',', 'Space' = ' ', 'Tab' = '\t'), inline = TRUE),
                      radioButtons('decimal2', 'Decimal', c('Period' = '.', 'Comma' = ','), inline = TRUE),
                      tags$hr(),
+                     conditionalPanel(
+                       condition = 'input.switch_to_two > input.switch_to_one',
+                       fluidRow(
+                         column(6,
+                                selectInput('ID_HH', 'Household ID - HH file', NULL)),
+                         column(6,
+                                selectInput('ID_I', 'Household ID - Ind. file', NULL))
+                       ),
+                       tags$hr()
+                     ),
                      tags$h4('Specify calibration variables', style = 'color: #367AB4'),
                      checkboxInput('stratification', 'Stratification'),
                      fluidRow(
@@ -100,9 +128,24 @@ function(request)
                      )
         ),
         mainPanel(width = 9,
-                  tags$h3('Loaded data', style = 'color: #367AB4'),
-                  tags$p('Dataset with', tags$span(textOutput('data_rows', inline = TRUE), style = 'color: red'), 'rows and', tags$span(textOutput('data_columns', inline = TRUE), style = 'color: red'), 'columns'),
-                  dataTableOutput('show_data'),
+                  conditionalPanel(
+                    condition = 'input.switch_to_two == input.switch_to_one',
+                    tags$h3('Loaded data', style = 'color: #367AB4'),
+                    tags$p('Dataset with', tags$span(textOutput('data_rows', inline = TRUE), style = 'color: red'), 'rows and', tags$span(textOutput('data_columns', inline = TRUE), style = 'color: red'), 'columns'),
+                    dataTableOutput('show_data')
+                  ),
+                  conditionalPanel(
+                    condition = 'input.switch_to_two > input.switch_to_one',
+                    tags$h3('Loaded data - Household file', style = 'color: #367AB4'),
+                    tags$p('Dataset with', tags$span(textOutput('data_rows_HH', inline = TRUE), style = 'color: red'), 'rows and', tags$span(textOutput('data_columns_HH', inline = TRUE), style = 'color: red'), 'columns'),
+                    dataTableOutput('show_data_HH')
+                  ),
+                  conditionalPanel(
+                    condition = 'input.switch_to_two > input.switch_to_one',
+                    tags$h3('Loaded data - Individual file', style = 'color: #367AB4'),
+                    tags$p('Dataset with', tags$span(textOutput('data_rows_I', inline = TRUE), style = 'color: red'), 'rows and', tags$span(textOutput('data_columns_I', inline = TRUE), style = 'color: red'), 'columns'),
+                    dataTableOutput('show_data_I')
+                  ),
                   tags$h3('Loaded totals', style = 'color: #367AB4'),
                   tags$p('Dataset with', tags$span(textOutput('totals_rows', inline = TRUE), style = 'color: red'), 'rows and', tags$span(textOutput('totals_columns', inline = TRUE), style = 'color: red'), 'columns'),
                   dataTableOutput('show_totals'),
@@ -157,10 +200,10 @@ function(request)
                      )
         ),
         mainPanel(width = 10,
-                  uiOutput('main')
+                  uiOutput('ui_main')
         )
       )
     ),
     id = 'page', inverse = TRUE
-               )
+  )
 }

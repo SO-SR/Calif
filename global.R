@@ -325,6 +325,8 @@ cal <- function(data, totals, stratification, miss, indicators, indicators_stats
     Xj <- Xj[which(!names(Xj) %in% indicators)]
     Xj1 <- Xj2 <- Xj
     Xj <- Xj[which(Xj > 0)]
+    if (0 %in% apply(as.data.frame(data[indices, names(data) %in% num]), 2, sum))
+      showModal(modalDialog('There are zero columns for some numerical variable in the data.', footer = modalButton('OK'), easyClose = TRUE))
     numsum <- NULL
     data_order <- NULL
     for (i in 1:(ncat + nnum)) {
@@ -340,6 +342,7 @@ cal <- function(data, totals, stratification, miss, indicators, indicators_stats
       }
     }
     if (setequal(data_order, names(Xj)) == FALSE) {
+      # if more variables were set as auxiliary than the table of totals contains
       showModal(modalDialog('Calibration variables do not match to the table of totals. Please check the data and totals for possible error, or make sure that you have
                             specified auxiliary calibration variables correctly.', footer = actionButton('modal_ok', 'OK')))
       req(FALSE)
@@ -417,4 +420,4 @@ cal <- function(data, totals, stratification, miss, indicators, indicators_stats
     calib_settings <- rbind(calib_settings, c(stratum = j, solver = solver, method = method, lower_bound = L, upper_bound = U))
   }
   list(result = result, sums1 = sums1, sums2 = sums2, calib_settings = calib_settings, rows = rows)
-    }
+}
