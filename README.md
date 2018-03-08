@@ -14,13 +14,13 @@ shiny::runUrl('https://slovak.statistics.sk/wps/wcm/connect/7014bfd4-54a2-4080-9
                launch.browser = TRUE)
 ```
 
+Alternatively, you can download single file app from the [webpage of the SO SR](https://slovak.statistics.sk/wps/portal/ext/products/software.tools/!ut/p/z1/jZDNDoIwEISfxSfoIH_luBgsNZVQpIC9GE6GRNGD8fkl6NXC3Db7zWxmmWUds2P_Hq79a3iM_W2azza6NKrkaeoRkB05iJKQG1N4IQ9YOwM6ll-AF1UGWVMpqkPgIQiZndaktT6ppoFotntI3xMojAHq6Od3AHbN_Z2gPIgVwJUIISk3VaJ9H-Sv8-OPCOv8DsC641tmZ8TVYCnDLj35eTeTOgySNh-yLq3D/dz/d5/L0lDUmlTUSEhL3dHa0FKRnNBLzROV3FpQSEhL2Vu/)
+where you can find the Calif 4.0.R code that can be sourced in R and run by **calif()** command.
+
 To install required packages run in R:
 ```r
 install.packages(c('shiny', 'sampling', 'nleqslv', 'haven'))
 ```
-
-To download single file app visit the [webpage of the SO SR](https://slovak.statistics.sk/wps/portal/ext/products/software.tools/!ut/p/z1/jZDNDoIwEISfxSfoIH_luBgsNZVQpIC9GE6GRNGD8fkl6NXC3Db7zWxmmWUds2P_Hq79a3iM_W2azza6NKrkaeoRkB05iJKQG1N4IQ9YOwM6ll-AF1UGWVMpqkPgIQiZndaktT6ppoFotntI3xMojAHq6Od3AHbN_Z2gPIgVwJUIISk3VaJ9H-Sv8-OPCOv8DsC641tmZ8TVYCnDLj35eTeTOgySNh-yLq3D/dz/d5/L0lDUmlTUSEhL3dHa0FKRnNBLzROV3FpQSEhL2Vu/)
-where you can find the Calif 4.0.R code that can be sourced in R and run by **calif()** command.
 
 Calif runs in your web browser, in order to guarantee a proper functioning make sure you are 
 using the latest version of the browser. Once Calif is launched, the whole session is 
@@ -49,17 +49,5 @@ Calif makes use of R packages **shiny**, **sampling**, **nleqslv** and **haven**
 Small changes were made to the calib function of the sampling package and 
 to the pie function of the graphics package.
 
-<table><tr><td>
-<img src="https://github.com/SO-SR/Calif/blob/master/Preview1.PNG?raw=true"  width="100%"
+<img src="https://github.com/SO-SR/Calif/blob/master/images/preview.gif"  width="100%"
 height="100%"/>
-</td></tr></table>
-
-<table><tr><td>
-<img src="https://github.com/SO-SR/Calif/blob/master/Preview2.PNG?raw=true"  width="100%"
-height="100%"/>
-</td></tr></table>
-
-<table><tr><td>
-<img src="https://github.com/SO-SR/Calif/blob/master/Preview3.PNG?raw=true"  width="100%"
-height="100%"/>
-</td></tr></table>
