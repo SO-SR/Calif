@@ -187,7 +187,7 @@ function(request)
                          column(6,
                                 numericInput('L', 'Lower bound', NULL, step = 0.01)),
                          column(6,
-                                numericInput('U', 'Upper bound', NULL, step = 0.01))
+                                numericInput('U', 'Upper bound', NULL, step = 0.05))
                        )
                      ),
                      actionButton('calibrate', 'CALIBRATE', class = 'btn btn-danger btn-block', icon = icon('gear')),
