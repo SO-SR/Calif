@@ -398,6 +398,37 @@ function(input, output, session)
                             decimal point. Please check it.', footer = actionButton('modal_ok', 'OK')))
       req(FALSE)
     }
+    else if (input$stratification == TRUE && min(sapply(values$totals[-1], is.numeric)) == 0) {
+      showModal(modalDialog('Some of the totals are not in numeric form! You have probably set a wrong 
+                            decimal point. Please check it.', footer = actionButton('modal_ok', 'OK')))
+      req(FALSE)
+    }
+    else if (input$stratification == FALSE && min(sapply(values$totals, is.numeric)) == 0) {
+      showModal(modalDialog('Some of the totals are not in numeric form! You have probably set a wrong 
+                            decimal point. Please check it.', footer = actionButton('modal_ok', 'OK')))
+      req(FALSE)
+    }
+    else if (isTruthy(input$num)) {
+      if (!values$multistage) {
+        if (min(sapply(values$data[input$num], is.numeric)) == 0) {
+          showModal(modalDialog('Numerical variables are not in numeric form! You have probably set a wrong 
+                            decimal point. Please check it.', footer = actionButton('modal_ok', 'OK')))
+          req(FALSE)
+        }
+      }
+      if (values$multistage) {
+        if (length(intersect(names(values$data_HH), input$num)) > 0) if (min(sapply(values$data_HH[names(values$data_HH) %in% input$num], is.numeric)) == 0) {
+          showModal(modalDialog('Numerical variables are not in numeric form! You have probably set a wrong 
+                                decimal point. Please check it.', footer = actionButton('modal_ok', 'OK')))
+          req(FALSE)
+        }
+        if (length(intersect(names(values$data_I), input$num)) > 0) if (min(sapply(values$data_I[names(values$data_I) %in% input$num], is.numeric)) == 0) {
+          showModal(modalDialog('Numerical variables are not in numeric form! You have probably set a wrong 
+                                decimal point. Please check it.', footer = actionButton('modal_ok', 'OK')))
+          req(FALSE)
+        }
+      }
+    }
     
     if (values$multistage) {
       num_HH <- intersect(names(values$data_HH), input$num)
@@ -688,16 +719,28 @@ function(input, output, session)
     if (!values$multistage) {
       data <- values$data
       data <- cbind(data, CalibrationWeight = values$weightsOUT)
-      write.table(data[, -1], paste0(file.path(input$save_folder, input$save_data), '.csv'), sep = input$separator1, dec = input$decimal1, na = '', row.names = FALSE)
-      write.table(settings, paste0(file.path(input$save_folder, input$save_settings), '.csv'), sep = input$separator1, dec = input$decimal1, na = '', row.names = FALSE)
+      w1 <- try(write.table(data[, -1], paste0(file.path(input$save_folder, input$save_data), '.csv'), 
+                            sep = input$separator1, dec = input$decimal1, na = '', row.names = FALSE), silent = TRUE)
+      w2 <- try(write.table(settings, paste0(file.path(input$save_folder, input$save_settings), '.csv'), 
+                            sep = input$separator1, dec = input$decimal1, na = '', row.names = FALSE), silent = TRUE)
+      if (class(w1) == 'try-error' || class(w2) == 'try-error') {
+        values$out_info <- 'Cannot write to file(s)!'
+        req(FALSE)
+      }
     }
     if (values$multistage) {
       data_HH <- cbind(values$data_HH, CalibrationWeight = values$weightsOUT)
       data_I <- merge(values$data_I, data_HH[c(input$ID_HH, 'CalibrationWeight')], by.x = input$ID_I, by.y = input$ID_HH, sort = FALSE)
-      write.table(data_HH[, !names(data_HH) %in% 'IDcalif'], paste0(file.path(input$save_folder, input$save_data), '_HH.csv'), 
-                  sep = input$separator1, dec = input$decimal1, na = '', row.names = FALSE)
-      write.table(data_I, paste0(file.path(input$save_folder, input$save_data), '_IND.csv'), sep = input$separator3, dec = input$decimal3, na = '', row.names = FALSE)
-      write.table(settings, paste0(file.path(input$save_folder, input$save_settings), '.csv'), sep = input$separator1, dec = input$decimal1, na = '', row.names = FALSE)
+      w1 <- try(write.table(data_HH[, !names(data_HH) %in% 'IDcalif'], paste0(file.path(input$save_folder, input$save_data), '_HH.csv'), 
+                            sep = input$separator1, dec = input$decimal1, na = '', row.names = FALSE), silent = TRUE)
+      w2 <- try(write.table(data_I, paste0(file.path(input$save_folder, input$save_data), '_IND.csv'), 
+                            sep = input$separator3, dec = input$decimal3, na = '', row.names = FALSE), silent = TRUE)
+      w3 <- try(write.table(settings, paste0(file.path(input$save_folder, input$save_settings), '.csv'), 
+                            sep = input$separator1, dec = input$decimal1, na = '', row.names = FALSE), silent = TRUE)
+      if (class(w1) == 'try-error' || class(w2) == 'try-error' || class(w3) == 'try-error') {
+        values$out_info <- 'Cannot write to file(s)!'
+        req(FALSE)
+      }
     }
     values$out_info <- 'The files have been saved.'
   })
