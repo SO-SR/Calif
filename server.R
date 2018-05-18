@@ -522,10 +522,6 @@ function(input, output, session)
       )
     )
     
-    initial <- val()$data$WEIGHTcalif
-    arecalibrated <- val()$data$IDcalif
-    values$werecalibrated <- sort(unique(c(values$werecalibrated, arecalibrated)))
-    werenotcalibrated <- setdiff(values$data$IDcalif, values$werecalibrated)
     if (input$method %in% c('Logit', 'Linear bounded')) {
       if (!isTruthy(input$L) || !isTruthy(input$U)) {
         showModal(modalDialog('Specify lower and upper bound, ideally L < 1 < U!', footer = modalButton('OK'), easyClose = TRUE))
@@ -554,6 +550,10 @@ function(input, output, session)
         req(FALSE)
       }
     }
+    if (input$stratification == TRUE && !isTruthy(input$strata)) {
+      showModal(modalDialog('Choose some strata!', footer = modalButton('OK'), easyClose = TRUE))
+      req(FALSE)
+    }
     columns <- adj()$columns
     if (isTruthy(input$indicators) && isTruthy(input$indicators_stats)) 
       columns <- c(apply(expand.grid(input$indicators, input$indicators_stats, stringsAsFactors = FALSE), 1, paste, collapse = '.'), columns)
@@ -565,6 +565,10 @@ function(input, output, session)
       res$sums1 <- cbind(Stratum = res$rows, res$sums1)
       res$sums2 <- cbind(Stratum = res$rows, res$sums2)
     }
+    initial <- val()$data$WEIGHTcalif
+    arecalibrated <- val()$data$IDcalif
+    values$werecalibrated <- sort(unique(c(values$werecalibrated, arecalibrated)))
+    werenotcalibrated <- setdiff(values$data$IDcalif, values$werecalibrated)
     values$calib_settings <- rbind(values$calib_settings, res$calib_settings)
     values$weightsOUT[arecalibrated] <- res$result
     values$weightsOUT[werenotcalibrated] <- values$data[werenotcalibrated, input$weights]
@@ -598,6 +602,10 @@ function(input, output, session)
       tableOutput('result_totals')
     )
     
+    if (input$stratification == TRUE && !isTruthy(input$strata)) {
+      showModal(modalDialog('Choose some strata!', footer = modalButton('OK'), easyClose = TRUE))
+      req(FALSE)
+    }
     values$out_stats <- values$out_pie <- values$out_hist <- values$out_box <- values$out_weights <- NULL
     columns <- adj()$columns
     if (isTruthy(input$indicators) && isTruthy(input$indicators_stats)) 
