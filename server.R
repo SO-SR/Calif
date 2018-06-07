@@ -673,7 +673,7 @@ function(input, output, session)
   
   output$result_weights <- renderDataTable({
     values$out_weights
-  }, options = list(pageLength = 20, lengthMenu = c(20, 50, 100, 500), searching = FALSE, order = c(2, 'asc')))
+  }, options = list(pageLength = 20, lengthMenu = c(20, 50, 100, 500), searching = FALSE))
   
   # save results - show modal
   observeEvent(input$save_result, {
