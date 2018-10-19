@@ -582,9 +582,9 @@ function(input, output, session)
     }
     if (min(res$result) >= 1) removeNotification('notification')
     values$out_stats <- data.frame(c('Initial weights interval', 'Calibration weights interval', 'Lower bound obtained', 'Upper bound obtained', 
-                                     'Average weight quotient', 'Average difference', 'Minimum realistic lower bound'),
-                                   c(min(initial), min(res$result), min(ratios), max(ratios), mean(ratios), mean(abs(res$result - initial)), L_w1),
-                                   c(max(initial), max(res$result), rep(NA, 5)))
+                                     'Average weight quotient', 'Average difference', 'SD of cal. and initial weights', 'Minimum realistic lower bound'),
+                                   c(min(initial), min(res$result), min(ratios), max(ratios), mean(ratios), mean(abs(res$result - initial)), sd(res$result), L_w1),
+                                   c(max(initial), max(res$result), rep(NA, 4), sd(initial), NA))
     values$out_pie <- AD_linear() / mean(abs(res$result - initial))
     values$out_hist <- ratios
     values$out_box <- list(initial, res$result)
