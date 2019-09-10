@@ -6,7 +6,7 @@ function(input, output, session)
                            ui_main = NULL, out_text1 = 'calif_output', out_text2 = 'calif_settings', out_info = NULL, multistage = FALSE,
                            num = NULL, cat = NULL, select_num = NULL, select_weights = NULL, select_stra = NULL, select_cat = NULL, select_indicators = NULL, 
                            select_explore = NULL, select_ID_HH = NULL, select_ID_I = NULL, selected_num = NULL, selected_weights = '', selected_stra = '', 
-                           selected_cat = NULL, selected_indicators = NULL, selected_ID_HH = NULL, selected_ID_I = NULL)
+                           selected_cat = NULL, selected_indicators = NULL, selected_ID_HH = NULL, selected_ID_I = NULL, update_strata = NULL)
   
   # to the data tab
   observeEvent(input$next_tab, {
@@ -177,7 +177,10 @@ function(input, output, session)
   })
   
   output$show_data <- renderDataTable({
-    values$data[-1]
+    req(values$data)
+    d <- values$data
+    names(d)[1] <- 'Row'
+    d
   }, options = list(pageLength = 5, lengthMenu = c(5, 10, 20, 50, 100, 500)))
   
   # show loaded data - two-stage calibration
@@ -202,7 +205,10 @@ function(input, output, session)
   })
   
   output$show_data_HH <- renderDataTable({
-    values$data_HH[-1]
+    req(values$data_HH)
+    d <- values$data_HH
+    names(d)[1] <- 'Row'
+    d
   }, options = list(pageLength = 5, lengthMenu = c(5, 10, 20, 50, 100, 500)))
   
   output$show_data_I <- renderDataTable({
@@ -463,6 +469,8 @@ function(input, output, session)
     }
     
     adj()  # strata list is set up
+    
+    updateSelectInput(session, 'strata', selected = values$update_strata)  # re-set selected strata from previous task
   })
   
   observeEvent(input$modal_ok, {
@@ -756,6 +764,11 @@ function(input, output, session)
   # show save info
   output$save_info <- renderText({
     values$out_info
+  })
+  
+  # save selected strata in order to update it when toggling tabs
+  observe({
+    values$update_strata <- input$strata
   })
   
   # save selected values in order to bookmark them later
