@@ -194,7 +194,7 @@ function(request)
                      tags$p(),
                      fluidRow(
                        column(6,
-                              bookmarkButton('Bookmark', class = 'btn btn-block', icon = icon('bookmark-o'), title = "Bookmark Calif's state and get URL for ")),
+                              bookmarkButton('Bookmark', class = 'btn btn-block', icon = icon('bookmark-o'), title = "Bookmark Calif's state and get URL for the current state.")),
                        column(6,
                               actionButton('save_result', 'Save', class = 'btn btn-primary btn-block', icon = icon('save')))
                      )
