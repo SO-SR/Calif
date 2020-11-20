@@ -545,7 +545,7 @@ function(input, output, session)
                               footer = modalButton('OK'), easyClose = TRUE))
         req(FALSE)
       }
-      if (input$L == 1 || input$U == 1) {
+      if (input$L == 1 || input$U == 1 && (input$method != 'Linear bounded' || input$solver != 'calib')) {
         showModal(modalDialog('Some of the bounds equal to 1 can be used only with Linear bounded method and calib as a solver.', footer = modalButton('OK'), easyClose = TRUE))
         req(FALSE)
       }
