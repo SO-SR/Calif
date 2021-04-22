@@ -1,6 +1,6 @@
 # MS Office Word files
-.doc
-.docx
+*.doc
+*.docx
 
 # archive files
-.zip
+*.zip
