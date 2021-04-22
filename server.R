@@ -2,7 +2,7 @@ function(input, output, session)
 {
   # reactive values
   values <- reactiveValues(wd = getwd(), data = NULL, data_HH = NULL, data_I = NULL, totals = NULL, calib_settings = NULL, weightsOUT = NULL, werecalibrated = NULL, 
-                           out_totals1 = NULL, out_totals2 = NULL, out_stats = NULL, out_pie = NULL, out_hist = NULL, out_box = NULL, out_weights = NULL, 
+                           out_totals1 = NULL, out_totals2 = NULL, out_stats = NULL, out_pie = NULL, out_hist = NULL, out_box = NULL, out_weights = NULL, out_hist_cal = NULL,
                            ui_main = NULL, out_text1 = 'calif_output', out_text2 = 'calif_settings', out_info = NULL, multistage = FALSE,
                            num = NULL, cat = NULL, select_num = NULL, select_weights = NULL, select_stra = NULL, select_cat = NULL, select_indicators = NULL, 
                            select_explore = NULL, select_ID_HH = NULL, select_ID_I = NULL, selected_num = NULL, selected_weights = '', selected_stra = '', 
@@ -508,9 +508,9 @@ function(input, output, session)
         column(3,
                conditionalPanel(
                  condition = 'output.result_box',
-                 tags$h4('Boxplots of weights', style = 'text-align: center; color: #367AB4')
+                 tags$h4('Histogram of calibration weights', style = 'text-align: center; color: #367AB4')
                ),
-               plotOutput('result_box', hover = hoverOpts('hover_box_plot', delay = 0), height = '305px'))
+               plotOutput('result_hist_cal', height = '300px'))  
       ),
       conditionalPanel(
         condition = 'output.result_totals',
@@ -522,11 +522,18 @@ function(input, output, session)
         condition = 'output.result_weights',
         tags$br(),
         tags$br(),
-        tags$h4('Weights & Quotients', style = 'color: #367AB4')
+        fluidRow(
+          column(4,
+                 tags$h4('Weights & Quotients', style = 'color: #367AB4')),
+          column(4, offset = 1,
+                 tags$h4('Boxplots of weights', style = 'text-align: center; color: #367AB4'))
+        )
       ),
       fluidRow(
         column(4,
-               dataTableOutput('result_weights'))
+               dataTableOutput('result_weights')),
+        column(4, offset = 1,
+               plotOutput('result_box', height = '500px'))
       )
     )
     
@@ -595,10 +602,11 @@ function(input, output, session)
                                    c(max(initial), max(res$result), rep(NA, 4), sd(initial), NA))
     values$out_pie <- AD_linear() / mean(abs(res$result - initial))
     values$out_hist <- ratios
-    values$out_box <- list(initial, res$result)
+    values$out_hist_cal <- res$result
     values$out_totals1 <- res$sums1
     values$out_totals2 <- res$sums2
     values$out_weights <- data.frame(Row = arecalibrated, Initial = round(initial, 5), Calibration = round(res$result, 5), Quotients = round(ratios, 5))
+    values$out_box <- list(initial, res$result)
   })
   
   # show with initial weights
@@ -614,7 +622,7 @@ function(input, output, session)
       showModal(modalDialog('Choose some strata!', footer = modalButton('OK'), easyClose = TRUE))
       req(FALSE)
     }
-    values$out_stats <- values$out_pie <- values$out_hist <- values$out_box <- values$out_weights <- NULL
+    values$out_stats <- values$out_pie <- values$out_hist <- values$out_box <- values$out_weights <- values$out_hist_cal <- NULL
     columns <- adj()$columns
     if (isTruthy(input$indicators) && isTruthy(input$indicators_stats)) 
       columns <- c(apply(expand.grid(input$indicators, input$indicators_stats, stringsAsFactors = FALSE), 1, paste, collapse = '.'), columns)
@@ -655,15 +663,13 @@ function(input, output, session)
   output$result_hist <- renderPlot({
     req(values$out_hist)
     par(mar = c(3,4,2,2))
-    hist(values$out_hist, col = '#5AC5CB', border = FALSE, main = NULL, xlab = NULL, ylab = NULL)
+    hist(values$out_hist, col = '#5AC5CB', border = FALSE, main = NULL, xlab = NULL, ylab = NULL, breaks = 20)
   })
   
-  output$result_box <- renderPlot({
-    req(values$out_box)
-    par(mar = c(3,3,1.5,2),  bty = 'n')
-    boxplot(values$out_box[[1]], values$out_box[[2]], names = NULL, col = c('#D0EDF3', '#D9534F'), xaxt = 'n')
-    axis(1, at = 1:2, labels = c('initial', 'calibration'), tick = FALSE, line = -0.5, cex.axis = 1.2)
-    abline(h = 1, lty = 2, col = 'lightgrey')
+  output$result_hist_cal <- renderPlot({
+    req(values$out_hist_cal)
+    par(mar = c(3,2,2,2))
+    hist(values$out_hist_cal, col = '#D9534F', border = FALSE, main = NULL, xlab = NULL, ylab = NULL, breaks = 20)
   })
   
   output$hover_info <- renderText({
@@ -674,14 +680,19 @@ function(input, output, session)
     if (!is.null(input$hover_hist_plot))
       return('Displays the distribution of quotients \'calibration weight/initial weight\'.
              It should resemble normal distribution as much as possible.')
-    if (!is.null(input$hover_box_plot))
-      return('Displays the boxplots of initial and calibration weights.
-             They shouldn\'t be very different from each other.')
   })
   
   output$result_weights <- renderDataTable({
     values$out_weights
   }, options = list(pageLength = 20, lengthMenu = c(20, 50, 100, 500), searching = FALSE))
+  
+  output$result_box <- renderPlot({
+    req(values$out_box)
+    par(bty = 'n')
+    boxplot(values$out_box[[1]], values$out_box[[2]], names = NULL, col = c('#D0EDF3', '#D9534F'), xaxt = 'n')
+    axis(1, at = 1:2, labels = c('initial', 'calibration'), tick = FALSE, line = -0.5, cex.axis = 1.2)
+    abline(h = 1, lty = 2, col = 'lightgrey')
+  })
   
   # save results - show modal
   observeEvent(input$save_result, {
